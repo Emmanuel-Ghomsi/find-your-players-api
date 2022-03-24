@@ -20,17 +20,18 @@ const protect = asyncHandler(async (req, res, next) => {
       req.user = await User.findById(decoded.id).select("-password");
 
       next();
-    } catch (error) {
-      console.error(error);
-      res.status(401).send("Vous n'êtes pas autorisé à acceder à ce contenu !");
+    } catch (err) {
+      res
+        .status(401)
+        .json({ error: "Vous n'êtes pas autorisé à acceder à ce contenu !" });
       throw new Error("Vous n'êtes pas autorisé à acceder à ce contenu !");
     }
   }
 
   if (!token) {
-    res
-      .status(401)
-      .send("Vous n'êtes pas autorisé à acceder à ce contenu, pas de token !");
+    res.status(401).json({
+      error: "Vous n'êtes pas autorisé à acceder à ce contenu, pas de token !",
+    });
     throw new Error(
       "Vous n'êtes pas autorisé à acceder à ce contenu, pas de token !"
     );

@@ -40,6 +40,14 @@ const userSchema = mongoose.Schema(
       type: String,
       required: false,
     },
+    role: {
+      type: String,
+      default: 'User',
+    },
+    state: {
+      type: Boolean,
+      default: false,
+    }
   },
   {
     timestamps: true,
