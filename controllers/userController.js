@@ -111,13 +111,35 @@ const login = asyncHandler(async (req, res) => {
 
   // check if email and password are valid
   if (user && (await bcrypt.compare(password, user.password))) {
-    console.log(user.state);
     if (user.state) {
       const token = genrerateJWT(user._id, "30d");
 
-      const { _id, name, email, role } = user;
+      const {
+        _id,
+        name,
+        email,
+        role,
+        avatar,
+        firstname,
+        lastname,
+        address,
+        telephone,
+        profileInformation,
+      } = user;
+
       res.status(201).json({
-        user: { _id, name, email, role },
+        user: {
+          _id,
+          name,
+          email,
+          role,
+          avatar,
+          firstname,
+          lastname,
+          address,
+          telephone,
+          profileInformation,
+        },
         token: token,
       });
     } else {
@@ -224,32 +246,81 @@ const verifyIsTokenMatchWithUser = asyncHandler(async (req, res) => {
  */
 const updateProfile = asyncHandler(async (req, res) => {
   // chercher l'utilisateur
-  const userFind = await User.find({
-    user: req.user.id,
-    id: req.params._id,
-  });
+  const userFind = await User.findById(req.params.id);
 
-  if (!userFind || !req.user) {
+  if (!userFind) {
     res.status(401).json({ error: "Utilisateur non trouvée" });
     throw new Error("Utilisateur non trouvée");
   }
 
-  // Make sure the logged in user matches the goal user
-  if (userFind._id.toString() !== req.user.id) {
-    res.status(401).json({ error: "Utilisateur non autorisé" });
-    throw new Error("Utilisateur non autorisé");
+  // validation des données de la request
+  if (!req.body.name) {
+    res.status(400).json({ error: "Veuillez renseigner l'identifiant !" });
+    throw new Error("Veuillez renseigner l'identifiant !");
+  }
+
+  const update = {
+    avatar: req.body.avatar,
+    name: req.body.name,
+    firstname: req.body.firstname,
+    lastname: req.body.lastname,
+    address: req.body.address,
+    telephone: req.body.telephone,
+    profileInformation: req.body.profileInformation,
+  };
+
+  try {
+    let newUser = await User.findByIdAndUpdate(req.params.id, update, {
+      new: true,
+    });
+    res.status(200).json({ user: newUser, message: "Utilisateur modifié !" });
+  } catch (error) {
+    res
+      .status(400)
+      .json({ error: "Une erreur est survenue lors de la modification !" });
+    throw new Error("Une erreur est survenue lors de la modification !");
+  }
+});
+
+/**
+ * @desc    Change password for user
+ * @route   PUT /api/users/change/password/:id
+ * @access  Private
+ */
+const changePassword = asyncHandler(async (req, res) => {
+  // chercher l'utilisateur
+  const userFind = await User.findById(req.params.id);
+
+  if (!userFind) {
+    res.status(401).json({ error: "Utilisateur non trouvée" });
+    throw new Error("Utilisateur non trouvée");
   }
 
   // validation des données de la request
-  if (!req.body.name || !req.body.email || !req.body.password) {
-    res.status(400).json({ error: "Veuillez remplir tout les champs !" });
-    throw new Error("Veuillez remplir tout les champs !");
+  if (!req.body.password) {
+    res.status(400).json({ error: "Veuillez renseigner le mot de passe !" });
+    throw new Error("Veuillez renseigner le mot de passe !");
   }
 
-  const newUser = await User.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
-  res.status(200).json(newUser);
+  // hasher le mot de passe
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+  try {
+    let newUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { password: hashedPassword },
+      {
+        new: true,
+      }
+    );
+    res.status(200).json({ user: newUser, message: "Mot de passe modifié !" });
+  } catch (error) {
+    res
+      .status(400)
+      .json({ error: "Une erreur est survenue lors de la modification !" });
+    throw new Error("Une erreur est survenue lors de la modification !");
+  }
 });
 
 /**
@@ -279,4 +350,5 @@ module.exports = {
   activate,
   verifyIsTokenMatchWithUser,
   resendEmailActivateAccount,
+  changePassword,
 };

@@ -27,4 +27,4 @@ app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/statistics", require("./routes/statisticsRoutes"));
 
 // Listening to server
-app.listen(process.env.PORT || 4000);
+app.listen(process.env.PORT || 4002);

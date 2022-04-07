@@ -52,7 +52,7 @@ const store = asyncHandler(async (req, res) => {
 
   if (statistic) res.status(201).json(statistic);
   else {
-    res.status(400).send("Données invalides.");
+    res.status(400).json({ error: "Données invalides." });
     throw new Error("Données invalides");
   }
 });
@@ -70,15 +70,24 @@ const index = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc    Get a specific statistic by User
+ * @route   GET /api/statistics/user/:id
+ * @access  Private
+ */
+const showByUser = asyncHandler(async (req, res) => {
+  const statistic = await Statistic.find({
+    user: req.params.id,
+  });
+  res.status(200).json(statistic);
+});
+
+/**
  * @desc    Get a specific statistic
  * @route   GET /api/statistics/:id
  * @access  Private
  */
 const show = asyncHandler(async (req, res) => {
-  const statistic = await Statistic.find({
-    user: req.user.id,
-    id: req.params._id,
-  });
+  const statistic = await Statistic.findById(req.params.id);
   res.status(200).json(statistic);
 });
 
@@ -91,18 +100,18 @@ const update = asyncHandler(async (req, res) => {
   const statistic = await Statistic.findById(req.params.id);
 
   if (!statistic) {
-    res.status(400).send("Statistique non trouvée");
+    res.status(400).json({ error: "Statistique non trouvée" });
     throw new Error("Statistique non trouvée");
   }
 
-  if (!req.user) {
-    res.status(401).send("Utilisateur non trouvée");
+  if (!req.body.user) {
+    res.status(401).json({ error: "Utilisateur non trouvée" });
     throw new Error("Utilisateur non trouvée");
   }
 
   // Make sure the logged in user matches the goal user
-  if (statistic.user.toString() !== req.user.id) {
-    res.status(401).send("Utilisateur non autorisé");
+  if (statistic.user.toString() !== req.body.user) {
+    res.status(401).json({ error: "Utilisateur non autorisé" });
     throw new Error("Utilisateur non autorisé");
   }
 
@@ -148,6 +157,7 @@ module.exports = {
   store,
   index,
   show,
+  showByUser,
   update,
   destroy,
 };

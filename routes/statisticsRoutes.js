@@ -6,6 +6,7 @@ const {
   store,
   index,
   show,
+  showByUser,
   update,
   destroy,
 } = require("../controllers/statisticsController");
@@ -14,6 +15,7 @@ const {
 const { protect } = require("../middleware/authMiddleware");
 
 // Group routes
+router.get("/user/:id", protect, showByUser);
 router.route("/").get(protect, index).post(protect, store);
 router
   .route("/:id")
