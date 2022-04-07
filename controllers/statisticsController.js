@@ -134,18 +134,18 @@ const destroy = asyncHandler(async (req, res) => {
   const statistic = await Statistic.findById(req.params.id);
 
   if (!statistic) {
-    res.status(400).send("Statistique non trouvée");
+    res.status(400).json({ error: "Statistique non trouvée" });
     throw new Error("Statistique non trouvée");
   }
 
   if (!req.user) {
-    res.status(401).send("Utilisateur non trouvée");
+    res.status(401).json({ error: "Utilisateur non trouvée" });
     throw new Error("Utilisateur non trouvée");
   }
 
   // Make sure the logged in user matches the goal user
-  if (statistic.user.toString() !== req.user.id) {
-    res.status(401).send("Utilisateur non autorisé");
+  if (statistic.user.toString() !== req.body.user) {
+    res.status(401).json({ error: "Utilisateur non autorisé" });
     throw new Error("Utilisateur non autorisé");
   }
 
