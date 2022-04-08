@@ -18,14 +18,14 @@ const register = asyncHandler(async (req, res) => {
 
   // validation des données de la request
   if (!name || !email || !password) {
-    res.status(400).json({ error: "Veuillez remplir tout les champs !" });
+    res.status(401).json({ error: "Veuillez remplir tout les champs !" });
     throw new Error("Veuillez remplir tout les champs !");
   }
 
   // chercher si l'utilisateur existe
   const userExist = await User.findOne({ email });
   if (userExist) {
-    res.status(400).json({ error: "Cet utilisateur existe dejà !" });
+    res.status(401).json({ error: "Cet utilisateur existe dejà !" });
     throw new Error("Cet utilisateur existe dejà !");
   }
 
@@ -65,11 +65,11 @@ const register = asyncHandler(async (req, res) => {
         });
       })
       .catch((error) => {
-        res.status(400).json({ err: error });
+        res.status(401).json({ error: "Le mail n'a pas pu être envoyé" });
         throw new Error("Le mail n'a pas pu être envoyé");
       });
   } else {
-    res.status(400).json({ error: "Données invalides" });
+    res.status(401).json({ error: "Données invalides" });
     throw new Error("Données invalides");
   }
 });
@@ -111,10 +111,24 @@ const login = asyncHandler(async (req, res) => {
 
   // check if email and password are valid
   if (user && (await bcrypt.compare(password, user.password))) {
-    if (user.state) {
-      const token = genrerateJWT(user._id, "30d");
+    //if (user.state) {
+    const token = genrerateJWT(user._id, "30d");
 
-      const {
+    const {
+      _id,
+      name,
+      email,
+      role,
+      avatar,
+      firstname,
+      lastname,
+      address,
+      telephone,
+      profileInformation,
+    } = user;
+
+    res.status(201).json({
+      user: {
         _id,
         name,
         email,
@@ -125,24 +139,10 @@ const login = asyncHandler(async (req, res) => {
         address,
         telephone,
         profileInformation,
-      } = user;
-
-      res.status(201).json({
-        user: {
-          _id,
-          name,
-          email,
-          role,
-          avatar,
-          firstname,
-          lastname,
-          address,
-          telephone,
-          profileInformation,
-        },
-        token: token,
-      });
-    } else {
+      },
+      token: token,
+    });
+    /*} else {
       res
         .status(400)
         .json(
@@ -151,7 +151,7 @@ const login = asyncHandler(async (req, res) => {
       throw new Error(
         "Bien vouloir consulter votre boîte mail pour activer votre compte"
       );
-    }
+    }*/
   } else {
     res.status(400).json("Données invalides.");
     throw new Error("Données invalides");
@@ -185,7 +185,7 @@ const resendEmailActivateAccount = asyncHandler(async (req, res) => {
         <p>Ce mail contiennt des informations sensibles, si vous n'avez pas créé de compte sur notre plateforme, bien vouloir ne pas y répondre</p>
         <p>${process.env.CLIENT_URL}</p>`,
     };
-
+    console.log(msg);
     sgMail
       .send(msg)
       .then(() => {
