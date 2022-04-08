@@ -245,6 +245,7 @@ const verifyIsTokenMatchWithUser = asyncHandler(async (req, res) => {
  * @access  Public
  */
 const updateProfile = asyncHandler(async (req, res) => {
+  console.log(req.params.id)
   // chercher l'utilisateur
   const userFind = await User.findById(req.params.id);
 
